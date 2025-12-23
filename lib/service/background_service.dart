@@ -121,6 +121,9 @@ void onStart(ServiceInstance service) async {
 
   service.on('initiate_pairing').listen((event) {
     if (event != null) {
+      print(
+        "BackgroundService: Initiating pairing to ${event['ip']}:${event['port']}",
+      );
       engine.pairingManager.initiatePairing(event['ip'], event['port']);
     }
   });
@@ -128,6 +131,12 @@ void onStart(ServiceInstance service) async {
   service.on('confirm_pairing').listen((event) {
     if (event != null) {
       engine.pairingManager.confirmPairing(event['accept']);
+    }
+  });
+
+  service.on('local_clipboard_update').listen((event) {
+    if (event != null && event['content'] != null) {
+      engine.clipboardManager.setLocalContent(event['content']);
     }
   });
 

@@ -33,6 +33,25 @@ class ClipboardManager {
     _contentController.close();
   }
 
+  // Called by BackgroundService when UI Isolate detects a change
+  void setLocalContent(String content) {
+    if (content == _lastContent) return;
+
+    _lastContent = content;
+    _contentController.add(content);
+
+    print("ClipboardManager: External local update received. Broadcasting.");
+
+    final msg = ClipboardMessage(
+      messageId: const Uuid().v4(),
+      type: 'text',
+      content: content,
+      sourceDeviceId: identity.deviceId,
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+    );
+    transferManager.sendToAll(msg);
+  }
+
   // New method for Manual Sync
   Future<void> forceSyncTo(String targetDeviceId) async {
     try {

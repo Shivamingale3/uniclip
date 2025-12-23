@@ -96,7 +96,6 @@ class UdpDiscovery {
 
       // Attach source IP
       String remoteIp = datagram.address.address;
-      print("Discovery: Packet from $remoteIp. Payload IPs: ${message.ips}");
 
       // If remote appears as loopback (127.0.0.1) but payload has IPs, use first valid one
       if ((remoteIp == '127.0.0.1' || remoteIp == '::1') &&
@@ -106,7 +105,6 @@ class UdpDiscovery {
           (ip) => ip != '127.0.0.1' && ip != '::1',
           orElse: () => remoteIp,
         );
-        print("Discovery: Substituting $remoteIp with $validIp");
         remoteIp = validIp;
       }
 

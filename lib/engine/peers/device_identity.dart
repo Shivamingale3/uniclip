@@ -31,17 +31,13 @@ class DeviceIdentity {
   Future<List<String>> getIpAddresses() async {
     try {
       final interfaces = await NetworkInterface.list();
-      print("DeviceIdentity: Found ${interfaces.length} interfaces");
-      final ips = interfaces
+      return interfaces
           .map((i) => i.addresses)
           .expand((e) => e)
           .where((a) => a.type == InternetAddressType.IPv4 && !a.isLoopback)
           .map((a) => a.address)
           .toList();
-      print("DeviceIdentity: Resolved IPs: $ips");
-      return ips;
     } catch (e) {
-      print("DeviceIdentity Error: $e");
       return [];
     }
   }

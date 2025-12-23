@@ -26,6 +26,7 @@ class DiscoveryMessage {
     'os': os,
     'tcpPort': tcpPort,
     'pairingMode': pairingMode,
+    if (sourceIp != null) 'sourceIp': sourceIp, // Include resolved IP
     if (ips != null) 'ips': ips,
   };
 
@@ -37,6 +38,7 @@ class DiscoveryMessage {
       os: json['os'] as String,
       tcpPort: json['tcpPort'] as int,
       pairingMode: json['pairingMode'] as bool,
+      sourceIp: json['sourceIp'] as String?, // Read resolved IP
       ips: (json['ips'] as List<dynamic>?)?.map((e) => e as String).toList(),
     );
   }

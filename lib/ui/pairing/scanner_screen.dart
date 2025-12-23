@@ -41,15 +41,18 @@ class _ScannerScreenState extends State<ScannerScreen>
     });
 
     ServiceClient().pairingStream.listen((event) {
+      print("ScannerScreen: Received PairingEvent: ${event.type}");
       if (!mounted) return;
       switch (event.type) {
         case PairingEventType.codeDisplay:
           _showPairingDialog(event.data as String);
           break;
         case PairingEventType.success:
-          if (Navigator.canPop(context)) Navigator.pop(context);
+          print("ScannerScreen: Pairing Success. Popping to Root...");
+          Navigator.of(context).popUntil((route) => route.isFirst);
           break;
         case PairingEventType.error:
+          print("ScannerScreen: Pairing Error: ${event.data}");
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(event.data.toString())));
@@ -282,6 +285,9 @@ class _ScannerScreenState extends State<ScannerScreen>
                               padding: const EdgeInsets.only(bottom: 12),
                               child: GestureDetector(
                                 onTap: () {
+                                  print(
+                                    "Scanner: Tapping to pair with ${peer.deviceName} at ${peer.sourceIp}:${peer.tcpPort}",
+                                  );
                                   ServiceClient().initiatePairing(
                                     peer.sourceIp ?? '127.0.0.1',
                                     peer.tcpPort,

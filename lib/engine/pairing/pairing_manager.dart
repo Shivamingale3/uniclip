@@ -140,9 +140,6 @@ class PairingManager {
 
   void _finalizePairing() async {
     _state = PairingState.paired;
-    _eventController.add(
-      PairingEvent(PairingEventType.success, "Paired successfully"),
-    );
 
     if (_pendingPeerId != null && _pendingPeerName != null) {
       await peerRegistry.addOrUpdate(
@@ -153,6 +150,10 @@ class PairingManager {
         _pendingPeerPort,
       );
     }
+
+    _eventController.add(
+      PairingEvent(PairingEventType.success, "Paired successfully"),
+    );
     _reset();
   }
 

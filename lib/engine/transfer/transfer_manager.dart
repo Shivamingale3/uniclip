@@ -26,7 +26,13 @@ class TransferManager {
 
   Future<void> sendToAll(ClipboardMessage message) async {
     // Iterate over PERSISTED & PAIRED devices
+    print(
+      "TransferManager: sending to all. Registry size: ${peerRegistry.devices.length}",
+    );
     for (final device in peerRegistry.devices) {
+      print(
+        "TransferManager: Checking device ${device.name}, autoSync: ${device.autoSync}",
+      );
       // Filter: AutoSync check or Manual?
       // If this confusingly named "start()" call triggers it, it's auto-sync.
       // But wait, the UI "Send" button calls this too.

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:uniclip/engine/engine.dart';
 import 'package:uniclip/engine/peers/peer_registry.dart';
@@ -71,6 +72,9 @@ class ServiceClient {
   void _initMobile() {
     final service = FlutterBackgroundService();
 
+    // Start local monitoring for Android 10+ restrictions
+    _startMobileClipboardMonitor();
+
     // Clipboard
     service.on('clipboard_update').listen((event) {
       if (event != null && event['content'] != null) {
@@ -103,18 +107,47 @@ class ServiceClient {
     // Pairing
     service.on('pairing_update').listen((event) {
       if (event != null && event['type'] != null) {
-        // Need PairingEvent.fromJson or similar. Wait, PairingEvent stores generic data.
-        // We'll need to reconstruct it manually or add serialization to PairingEvent.
-        // For now, let's assume we pass type and data separately.
         try {
           final typeIndex = event['type'] as int;
           final data = event['data'];
+          print("ServiceClient: Forwarding PairingEvent $typeIndex");
           _pairingController.add(
             PairingEvent(PairingEventType.values[typeIndex], data),
           );
         } catch (e) {
           print("Error parsing pairing event: $e");
         }
+      }
+    });
+  }
+
+  // Mobile Clipboard Monitoring (UI Isolate)
+  Timer? _mobileMonitorTimer;
+  String? _lastMobileContent;
+
+  void _startMobileClipboardMonitor() {
+    _mobileMonitorTimer = Timer.periodic(const Duration(seconds: 1), (
+      timer,
+    ) async {
+      // Only checking if we are in foreground effectively manages itself
+      // because Isolate pauses or clipboard fails in background.
+      // But we should catch errors.
+      try {
+        final data = await Clipboard.getData(Clipboard.kTextPlain);
+        if (data?.text != null) {
+          final content = data!.text!;
+          if (content != _lastMobileContent) {
+            _lastMobileContent = content;
+            // Notify local UI immediately
+            _clipboardController.add(content);
+            // Send to Background Service to broadcast
+            FlutterBackgroundService().invoke('local_clipboard_update', {
+              'content': content,
+            });
+          }
+        }
+      } catch (e) {
+        // Verify Permissions/Focus
       }
     });
   }

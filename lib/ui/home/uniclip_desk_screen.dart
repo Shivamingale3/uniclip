@@ -37,7 +37,7 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
     }
 
     _refresh(); // Initial refresh for devices
-    Engine().pairingManager.events.listen((e) {
+    ServiceClient().pairingStream.listen((e) {
       if (e.type == PairingEventType.success) {
         _refresh();
       } else if (e.type == PairingEventType.codeDisplay) {
