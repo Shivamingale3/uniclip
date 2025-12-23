@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:uniclip/engine/engine.dart';
 import 'package:uniclip/engine/pairing/pairing_manager.dart';
 import 'package:uniclip/engine/protocol/messages.dart';
+import 'package:uniclip/service/service_client.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -24,8 +24,8 @@ class _ScannerScreenState extends State<ScannerScreen>
       duration: const Duration(seconds: 4),
     )..repeat();
 
-    // Engine Listeners
-    Engine().discovery.messages.listen((message) {
+    // Engine Listeners via ServiceClient
+    ServiceClient().discoveryStream.listen((message) {
       if (mounted) {
         setState(() {
           final index = _peers.indexWhere(
@@ -40,14 +40,14 @@ class _ScannerScreenState extends State<ScannerScreen>
       }
     });
 
-    Engine().pairingManager.events.listen((event) {
+    ServiceClient().pairingStream.listen((event) {
       if (!mounted) return;
       switch (event.type) {
         case PairingEventType.codeDisplay:
           _showPairingDialog(event.data as String);
           break;
         case PairingEventType.success:
-          Navigator.pop(context);
+          if (Navigator.canPop(context)) Navigator.pop(context);
           break;
         case PairingEventType.error:
           ScaffoldMessenger.of(
@@ -120,7 +120,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   // Reject Button
                   GestureDetector(
                     onTap: () {
-                      Engine().pairingManager.confirmPairing(false);
+                      ServiceClient().confirmPairing(false);
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -146,7 +146,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                   // Authorize Button
                   GestureDetector(
                     onTap: () {
-                      Engine().pairingManager.confirmPairing(true);
+                      ServiceClient().confirmPairing(true);
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -282,7 +282,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                               padding: const EdgeInsets.only(bottom: 12),
                               child: GestureDetector(
                                 onTap: () {
-                                  Engine().pairingManager.initiatePairing(
+                                  ServiceClient().initiatePairing(
                                     peer.sourceIp ?? '127.0.0.1',
                                     peer.tcpPort,
                                   );

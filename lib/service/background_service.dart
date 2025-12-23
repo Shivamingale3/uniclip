@@ -6,7 +6,6 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:uniclip/engine/engine.dart';
 import 'package:uniclip/engine/peers/peer_registry.dart';
-import 'package:quick_settings/quick_settings.dart';
 
 class BackgroundService {
   static Future<void> initialize() async {
@@ -44,72 +43,81 @@ class BackgroundService {
       ),
     );
   }
+}
 
-  @pragma('vm:entry-point')
-  static void onStart(ServiceInstance service) async {
-    DartPluginRegistrant.ensureInitialized();
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) async {
+  DartPluginRegistrant.ensureInitialized();
 
-    // Quick Settings Setup
-    QuickSettings.setup(
-      onTileClicked: (tile) {
-        if (tile.tileStatus == TileStatus.active) {
-          tile.tileStatus = TileStatus.inactive;
-          tile.label = "Sync Paused";
-          // TODO: Pause Engine
-        } else {
-          tile.tileStatus = TileStatus.active;
-          tile.label = "Auto Sync On";
-          // TODO: Resume Engine
-        }
-        return tile;
-      },
-      onTileAdded: (tile) {
-        tile.tileStatus = TileStatus.active;
-        tile.label = "Auto Sync On";
-        return tile;
-      },
-    );
+  // Initialize Engine in this Isolate
+  final engine = Engine();
 
-    // Initialize Engine in this Isolate
-    final engine = Engine();
+  // Need to initialize Engine properly
+  await engine.start();
 
-    // Need to initialize Engine properly
-    // Note: SharedPreferences works in background isolate on Android.
-    await engine.start();
+  // Listen to Engine Clipboard Events and forward to UI
+  engine.clipboardManager.contentStream.listen((content) {
+    service.invoke('clipboard_update', {'content': content});
 
-    // Listen to Engine Clipboard Events and forward to UI
-    engine.clipboardManager.contentStream.listen((content) {
-      service.invoke('clipboard_update', {'content': content});
-
-      // Update Notification
-      FlutterLocalNotificationsPlugin().show(
-        888,
-        'Uniclip Active',
-        'Copied: ${content.length > 20 ? content.substring(0, 20) + "..." : content}',
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'uniclip_service',
-            'Uniclip Background Service',
-            icon: 'ic_launcher',
-            ongoing: true,
-          ),
+    // Update Notification
+    FlutterLocalNotificationsPlugin().show(
+      888,
+      'Uniclip Active',
+      'Copied: ${content.length > 20 ? content.substring(0, 20) + "..." : content}',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'uniclip_service',
+          'Uniclip Background Service',
+          icon: 'ic_launcher',
+          ongoing: true,
         ),
-      );
-    });
+      ),
+    );
+  });
 
-    // Listen to Peer Registry Changes
-    engine.peerRegistry.devicesStream.listen((devices) {
-      final jsonList = devices.map((d) => d.toJson()).toList();
-      service.invoke('peers_update', {'devices': jsonEncode(jsonList)});
-    });
+  // Listen to Peer Registry Changes
+  engine.peerRegistry.devicesStream.listen((devices) {
+    final jsonList = devices.map((d) => d.toJson()).toList();
+    service.invoke('peers_update', {'devices': jsonEncode(jsonList)});
+  });
 
-    // Listen to UI commands
-    service.on('manual_sync').listen((event) {
-      // handle manual sync request from UI
-    });
+  // Forward Discovery Messages
+  engine.discovery.messages.listen((msg) {
+    service.invoke('discovery_update', {'message': jsonEncode(msg.toJson())});
+  });
 
-    service.on('stop').listen((event) {
-      service.stopSelf();
+  // Forward Pairing Events
+  engine.pairingManager.events.listen((event) {
+    service.invoke('pairing_update', {
+      'type': event.type.index,
+      'data': event.data,
     });
-  }
+  });
+
+  // Listen to UI commands
+  service.on('manual_sync').listen((event) {
+    // handle manual sync request from UI
+  });
+
+  service.on('update_name').listen((event) {
+    if (event != null && event['name'] != null) {
+      engine.updateDeviceName(event['name']);
+    }
+  });
+
+  service.on('initiate_pairing').listen((event) {
+    if (event != null) {
+      engine.pairingManager.initiatePairing(event['ip'], event['port']);
+    }
+  });
+
+  service.on('confirm_pairing').listen((event) {
+    if (event != null) {
+      engine.pairingManager.confirmPairing(event['accept']);
+    }
+  });
+
+  service.on('stop').listen((event) {
+    service.stopSelf();
+  });
 }

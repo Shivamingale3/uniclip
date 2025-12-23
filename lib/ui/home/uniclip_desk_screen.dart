@@ -133,63 +133,68 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: _showEditNameDialog,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  Engine().identity.deviceName.toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Courier',
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.green.withOpacity(0.5),
-                                    ),
-                                    borderRadius: BorderRadius.circular(4),
-                                    color: Colors.green.withOpacity(0.1),
-                                  ),
-                                  child: const Text(
-                                    "IDENTITY",
-                                    style: TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 10,
-                                      fontFamily: 'Courier',
-                                      fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: _showEditNameDialog,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      Engine().identity.deviceName
+                                          .toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Courier',
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  Icons.edit,
-                                  color: Colors.green.withOpacity(0.5),
-                                  size: 16,
-                                ),
-                              ],
-                            ),
-                            Text(
-                              Engine().identity.os.toUpperCase(),
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
-                                fontSize: 12,
-                                fontFamily: 'Courier',
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.green.withOpacity(0.5),
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                      color: Colors.green.withOpacity(0.1),
+                                    ),
+                                    child: const Text(
+                                      "IDENTITY",
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 10,
+                                        fontFamily: 'Courier',
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.edit,
+                                    color: Colors.green.withOpacity(0.5),
+                                    size: 16,
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
+                              Text(
+                                Engine().identity.os.toUpperCase(),
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.5),
+                                  fontSize: 12,
+                                  fontFamily: 'Courier',
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       Row(
@@ -414,7 +419,7 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
                     color: Colors.green.shade900,
                     onPressed: () async {
                       if (controller.text.isNotEmpty) {
-                        await Engine().updateDeviceName(controller.text);
+                        await ServiceClient().updateDeviceName(controller.text);
                         setState(() {}); // Refresh UI
                         Navigator.pop(context);
                       }

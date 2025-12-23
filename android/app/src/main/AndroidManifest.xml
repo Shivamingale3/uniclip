@@ -40,9 +40,9 @@
             android:foregroundServiceType="dataSync"
         />
 
-        <!-- Quick Settings Tile -->
+        <!-- Quick Settings Tile (Native) -->
         <service
-            android:name="io.apparence.quick_settings.QuickSettingsTileService"
+            android:name=".UniclipTileService"
             android:icon="@mipmap/ic_launcher"
             android:label="Uniclip Auto-Sync"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
