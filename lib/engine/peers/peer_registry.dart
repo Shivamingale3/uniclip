@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PairedDevice {
@@ -64,6 +65,9 @@ class PeerRegistry {
   static const String _keyPairedDevices = 'paired_devices';
   final List<PairedDevice> _devices = [];
 
+  final _devicesController = StreamController<List<PairedDevice>>.broadcast();
+  Stream<List<PairedDevice>> get devicesStream => _devicesController.stream;
+
   List<PairedDevice> get devices => List.unmodifiable(_devices);
 
   Future<void> load() async {
@@ -73,6 +77,7 @@ class PeerRegistry {
       final List<dynamic> jsonList = jsonDecode(jsonString);
       _devices.clear();
       _devices.addAll(jsonList.map((j) => PairedDevice.fromJson(j)));
+      _notify();
     }
   }
 
@@ -80,6 +85,11 @@ class PeerRegistry {
     final prefs = await SharedPreferences.getInstance();
     final jsonList = _devices.map((d) => d.toJson()).toList();
     await prefs.setString(_keyPairedDevices, jsonEncode(jsonList));
+    _notify();
+  }
+
+  void _notify() {
+    _devicesController.add(List.unmodifiable(_devices));
   }
 
   Future<void> addOrUpdate(

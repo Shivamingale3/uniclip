@@ -1,9 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:uniclip/engine/engine.dart';
 import 'package:uniclip/engine/peers/peer_registry.dart';
 import 'package:uniclip/engine/pairing/pairing_manager.dart';
 import 'package:uniclip/ui/pairing/scanner_screen.dart';
 import '../widgets/skeuo_widgets.dart';
+import 'package:window_manager/window_manager.dart';
+// import 'package:system_tray/system_tray.dart';
+import 'package:uniclip/service/service_client.dart';
 
 class UniclipDeskScreen extends StatefulWidget {
   const UniclipDeskScreen({super.key});
@@ -12,14 +16,26 @@ class UniclipDeskScreen extends StatefulWidget {
   State<UniclipDeskScreen> createState() => _UniclipDeskScreenState();
 }
 
-class _UniclipDeskScreenState extends State<UniclipDeskScreen> {
-  String _clipboardContent = "Waiting for data stream...";
+class _UniclipDeskScreenState extends State<UniclipDeskScreen>
+    with WindowListener {
+  String _clipboardContent = "WAITING FOR SIGNAL...";
   List<PairedDevice> _devices = [];
+
+  // New state variables for system tray and window management
+  // final SystemTray _systemTray = SystemTray();
+  // final AppWindow _appWindow = AppWindow();
 
   @override
   void initState() {
     super.initState();
-    _refresh();
+    // Add window listener and system tray initialization for desktop platforms
+    // Desktop window management - Disabled until SystemTray update
+    // if (!Platform.isAndroid && !Platform.isIOS) {
+    //   windowManager.addListener(this);
+    //   _initSystemTray();
+    // }
+
+    _refresh(); // Initial refresh for devices
     Engine().pairingManager.events.listen((e) {
       if (e.type == PairingEventType.success) {
         _refresh();
@@ -27,13 +43,58 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen> {
     });
 
     // Listen to the stream for ALL updates (local + remote)
-    Engine().clipboardManager.contentStream.listen((content) {
+    ServiceClient().clipboardStream.listen((content) {
       setState(() {
         _clipboardContent = content;
       });
     });
 
-    _refresh();
+    // Listen to peers
+    ServiceClient().peersStream.listen((peers) {
+      setState(() {
+        _devices = peers;
+      });
+    });
+  }
+
+  /*
+  Future<void> _initSystemTray() async {
+    String iconPath = Platform.isWindows
+        ? 'assets/app_icon.ico'
+        : 'assets/app_icon.png';
+    // Note: requires assets configuration. For now relying on default or package assets if present.
+    // Using simple approach first.
+
+    await _systemTray.initSystemTray(title: "Uniclip", iconPath: iconPath);
+
+    final Menu menu = Menu();
+    await menu.buildFrom([
+      MenuItemLabel(label: 'Show', onClicked: (menuItem) => _appWindow.show()),
+      MenuItemLabel(label: 'Quit', onClicked: (menuItem) => _appWindow.close()),
+    ]);
+
+    await _systemTray.setContextMenu(menu);
+
+    _systemTray.registerSystemTrayEventHandler((eventName) {
+      if (eventName == kSystemTrayEventClick) {
+        Platform.isWindows ? _appWindow.show() : _systemTray.popUpContextMenu();
+      } else if (eventName == kSystemTrayEventRightClick) {
+        Platform.isWindows ? _systemTray.popUpContextMenu() : _appWindow.show();
+      }
+    });
+  }
+
+  @override
+  void onWindowClose() async {
+    // Minimize to tray
+    await _appWindow.hide();
+  }
+  */
+
+  @override
+  void dispose() {
+    // windowManager.removeListener(this);
+    super.dispose();
   }
 
   Future<void> _refresh() async {

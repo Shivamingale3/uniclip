@@ -1,10 +1,24 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:uniclip/engine/engine.dart';
 import 'package:uniclip/ui/home/uniclip_desk_screen.dart';
+import 'package:uniclip/service/background_service.dart';
+import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Engine().start();
+
+  if (Platform.isAndroid || Platform.isIOS) {
+    await BackgroundService.initialize();
+  } else {
+    // Desktop: Run Engine Locally
+    await Engine().start();
+
+    // Window Manager for Minimize to Tray
+    await windowManager.ensureInitialized();
+    windowManager.setPreventClose(true);
+  }
+
   runApp(const UniclipApp());
 }
 
