@@ -9,6 +9,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (Platform.isAndroid || Platform.isIOS) {
+    // Determine identity for UI display
+    await Engine().identity.initialize();
     await BackgroundService.initialize();
   } else {
     // Desktop: Run Engine Locally

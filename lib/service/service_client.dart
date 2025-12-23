@@ -102,7 +102,7 @@ class ServiceClient {
 
     // Pairing
     service.on('pairing_update').listen((event) {
-      if (event != null && event['event'] != null) {
+      if (event != null && event['type'] != null) {
         // Need PairingEvent.fromJson or similar. Wait, PairingEvent stores generic data.
         // We'll need to reconstruct it manually or add serialization to PairingEvent.
         // For now, let's assume we pass type and data separately.
