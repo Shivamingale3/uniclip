@@ -481,10 +481,10 @@ packages:
     dependency: "direct main"
     description:
       name: system_tray
-      sha256: "1bcc11bc230033be20d7443c29f65f68d67169715a838a1122f20fbff5dd2d19"
+      sha256: "40444e5de8ed907822a98694fd031b8accc3cb3c0baa547634ce76189cf3d9cf"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.1"
+    version: "2.0.3"
   term_glyph:
     dependency: transitive
     description:

@@ -39,7 +39,7 @@ dependencies:
   provider: ^6.1.5+1
   flutter_background_service: ^5.1.0
   flutter_local_notifications: ^19.5.0
-  system_tray: ^0.1.1
+  system_tray: ^2.0.3
   window_manager: ^0.5.1
 
 dev_dependencies:
@@ -52,6 +52,10 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+dependency_overrides:
+  # system_tray 2.0.3 depends on uuid ^3.0.6, which conflicts with ^4.0.0
+  uuid: ^4.5.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

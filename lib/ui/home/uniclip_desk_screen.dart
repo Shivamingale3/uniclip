@@ -6,7 +6,7 @@ import 'package:uniclip/engine/pairing/pairing_manager.dart';
 import 'package:uniclip/ui/pairing/scanner_screen.dart';
 import '../widgets/skeuo_widgets.dart';
 import 'package:window_manager/window_manager.dart';
-// import 'package:system_tray/system_tray.dart';
+import 'package:system_tray/system_tray.dart';
 import 'package:uniclip/service/service_client.dart';
 
 class UniclipDeskScreen extends StatefulWidget {
@@ -22,18 +22,19 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
   List<PairedDevice> _devices = [];
 
   // New state variables for system tray and window management
-  // final SystemTray _systemTray = SystemTray();
-  // final AppWindow _appWindow = AppWindow();
+  SystemTray? _systemTray;
+  AppWindow? _appWindow;
 
   @override
   void initState() {
     super.initState();
     // Add window listener and system tray initialization for desktop platforms
-    // Desktop window management - Disabled until SystemTray update
-    // if (!Platform.isAndroid && !Platform.isIOS) {
-    //   windowManager.addListener(this);
-    //   _initSystemTray();
-    // }
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      _systemTray = SystemTray();
+      _appWindow = AppWindow();
+      windowManager.addListener(this);
+      _initSystemTray();
+    }
 
     _refresh(); // Initial refresh for devices
     Engine().pairingManager.events.listen((e) {
@@ -57,29 +58,37 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
     });
   }
 
-  /*
   Future<void> _initSystemTray() async {
+    if (_systemTray == null || _appWindow == null) return;
+
     String iconPath = Platform.isWindows
         ? 'assets/app_icon.ico'
-        : 'assets/app_icon.png';
+        : 'assets/icon.png';
     // Note: requires assets configuration. For now relying on default or package assets if present.
     // Using simple approach first.
 
-    await _systemTray.initSystemTray(title: "Uniclip", iconPath: iconPath);
+    await _systemTray!.initSystemTray(title: "Uniclip", iconPath: iconPath);
 
     final Menu menu = Menu();
     await menu.buildFrom([
-      MenuItemLabel(label: 'Show', onClicked: (menuItem) => _appWindow.show()),
-      MenuItemLabel(label: 'Quit', onClicked: (menuItem) => _appWindow.close()),
+      MenuItemLabel(label: 'Show', onClicked: (menuItem) => _appWindow!.show()),
+      MenuItemLabel(
+        label: 'Quit',
+        onClicked: (menuItem) => _appWindow!.close(),
+      ),
     ]);
 
-    await _systemTray.setContextMenu(menu);
+    await _systemTray!.setContextMenu(menu);
 
-    _systemTray.registerSystemTrayEventHandler((eventName) {
+    _systemTray!.registerSystemTrayEventHandler((eventName) {
       if (eventName == kSystemTrayEventClick) {
-        Platform.isWindows ? _appWindow.show() : _systemTray.popUpContextMenu();
+        Platform.isWindows
+            ? _appWindow!.show()
+            : _systemTray!.popUpContextMenu();
       } else if (eventName == kSystemTrayEventRightClick) {
-        Platform.isWindows ? _systemTray.popUpContextMenu() : _appWindow.show();
+        Platform.isWindows
+            ? _systemTray!.popUpContextMenu()
+            : _appWindow!.show();
       }
     });
   }
@@ -87,13 +96,14 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
   @override
   void onWindowClose() async {
     // Minimize to tray
-    await _appWindow.hide();
+    if (_appWindow != null) {
+      await _appWindow!.hide();
+    }
   }
-  */
 
   @override
   void dispose() {
-    // windowManager.removeListener(this);
+    windowManager.removeListener(this);
     super.dispose();
   }
 
