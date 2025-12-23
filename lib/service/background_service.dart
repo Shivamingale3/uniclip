@@ -96,7 +96,21 @@ void onStart(ServiceInstance service) async {
 
   // Listen to UI commands
   service.on('manual_sync').listen((event) {
-    // handle manual sync request from UI
+    if (event != null && event['deviceId'] != null) {
+      engine.clipboardManager.forceSyncTo(event['deviceId']);
+    }
+  });
+
+  service.on('unpair').listen((event) {
+    if (event != null && event['deviceId'] != null) {
+      engine.peerRegistry.unpair(event['deviceId']);
+    }
+  });
+
+  service.on('toggle_auto_sync').listen((event) {
+    if (event != null && event['deviceId'] != null) {
+      engine.peerRegistry.toggleAutoSync(event['deviceId']);
+    }
   });
 
   service.on('update_name').listen((event) {

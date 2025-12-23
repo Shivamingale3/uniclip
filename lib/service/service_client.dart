@@ -145,4 +145,30 @@ class ServiceClient {
       await Engine().updateDeviceName(name);
     }
   }
+
+  Future<void> unpair(String deviceId) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterBackgroundService().invoke('unpair', {'deviceId': deviceId});
+    } else {
+      await Engine().peerRegistry.unpair(deviceId);
+    }
+  }
+
+  Future<void> manualSync(String deviceId) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterBackgroundService().invoke('manual_sync', {'deviceId': deviceId});
+    } else {
+      await Engine().clipboardManager.forceSyncTo(deviceId);
+    }
+  }
+
+  Future<void> toggleAutoSync(String deviceId) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      FlutterBackgroundService().invoke('toggle_auto_sync', {
+        'deviceId': deviceId,
+      });
+    } else {
+      await Engine().peerRegistry.toggleAutoSync(deviceId);
+    }
+  }
 }

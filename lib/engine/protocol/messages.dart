@@ -6,6 +6,7 @@ class DiscoveryMessage {
   final int tcpPort;
   final bool pairingMode;
   final String? sourceIp;
+  final List<String>? ips;
 
   DiscoveryMessage({
     required this.version,
@@ -15,6 +16,7 @@ class DiscoveryMessage {
     required this.tcpPort,
     required this.pairingMode,
     this.sourceIp,
+    this.ips,
   });
 
   Map<String, dynamic> toJson() => {
@@ -24,9 +26,9 @@ class DiscoveryMessage {
     'os': os,
     'tcpPort': tcpPort,
     'pairingMode': pairingMode,
+    if (ips != null) 'ips': ips,
   };
 
-  // Factory from JSON (IP is unknown at decode time)
   factory DiscoveryMessage.fromJson(Map<String, dynamic> json) {
     return DiscoveryMessage(
       version: json['version'] as int,
@@ -35,6 +37,7 @@ class DiscoveryMessage {
       os: json['os'] as String,
       tcpPort: json['tcpPort'] as int,
       pairingMode: json['pairingMode'] as bool,
+      ips: (json['ips'] as List<dynamic>?)?.map((e) => e as String).toList(),
     );
   }
 
@@ -47,6 +50,7 @@ class DiscoveryMessage {
       tcpPort: tcpPort,
       pairingMode: pairingMode,
       sourceIp: ip,
+      ips: ips,
     );
   }
 }

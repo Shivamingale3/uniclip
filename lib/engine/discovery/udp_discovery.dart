@@ -55,8 +55,15 @@ class UdpDiscovery {
     _socket = null;
   }
 
-  void _sendBroadcast() {
+  Future<void> _sendBroadcast() async {
     if (_socket == null) return;
+
+    List<String> ips = [];
+    try {
+      ips = await identity.getIpAddresses();
+    } catch (e) {
+      // Ignore
+    }
 
     final message = DiscoveryMessage(
       version: 1,
@@ -64,7 +71,8 @@ class UdpDiscovery {
       deviceName: identity.deviceName,
       os: identity.os,
       tcpPort: tcpPort,
-      pairingMode: true, // For now always true for testing
+      pairingMode: true,
+      ips: ips,
     );
 
     final jsonData = jsonEncode(message.toJson());
@@ -87,11 +95,26 @@ class UdpDiscovery {
       if (message.deviceId == identity.deviceId) return;
 
       // Attach source IP
-      final messageWithIp = message.copyWithIp(datagram.address.address);
+      String remoteIp = datagram.address.address;
+      print("Discovery: Packet from $remoteIp. Payload IPs: ${message.ips}");
+
+      // If remote appears as loopback (127.0.0.1) but payload has IPs, use first valid one
+      if ((remoteIp == '127.0.0.1' || remoteIp == '::1') &&
+          message.ips != null &&
+          message.ips!.isNotEmpty) {
+        final validIp = message.ips!.firstWhere(
+          (ip) => ip != '127.0.0.1' && ip != '::1',
+          orElse: () => remoteIp,
+        );
+        print("Discovery: Substituting $remoteIp with $validIp");
+        remoteIp = validIp;
+      }
+
+      final messageWithIp = message.copyWithIp(remoteIp);
 
       _discoveryStream.add(messageWithIp);
     } catch (e) {
-      // Malformed packet
+      print("Discovery Error: $e");
     }
   }
 }

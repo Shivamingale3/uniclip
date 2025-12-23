@@ -40,6 +40,10 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
     Engine().pairingManager.events.listen((e) {
       if (e.type == PairingEventType.success) {
         _refresh();
+      } else if (e.type == PairingEventType.codeDisplay) {
+        if (mounted) {
+          _showPairingRequestDialog(e.data as String);
+        }
       }
     });
 
@@ -64,18 +68,39 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
     String iconPath = Platform.isWindows
         ? 'assets/app_icon.ico'
         : 'assets/icon.png';
-    // Note: requires assets configuration. For now relying on default or package assets if present.
-    // Using simple approach first.
+
+    if (!Platform.isWindows) {
+      // Try to resolve absolute path for Linux
+      try {
+        final String executablePath = Platform.resolvedExecutable;
+        final String executableDir = File(executablePath).parent.path;
+        final String resolvedPath =
+            '$executableDir/data/flutter_assets/assets/tray_icon.png';
+
+        if (await File(resolvedPath).exists()) {
+          iconPath = resolvedPath;
+          print("SystemTray: Using bundled asset: $iconPath");
+        } else {
+          print("SystemTray: Bundled asset not found at $resolvedPath");
+          // Fallback for dev mode
+          final devPath =
+              '${Directory.current.path}/build/linux/x64/debug/bundle/data/flutter_assets/assets/tray_icon.png';
+          if (await File(devPath).exists()) {
+            iconPath = devPath;
+            print("SystemTray: Using dev asset: $iconPath");
+          }
+        }
+      } catch (e) {
+        print("SystemTray: Error resolving path: $e");
+      }
+    }
 
     await _systemTray!.initSystemTray(title: "Uniclip", iconPath: iconPath);
 
     final Menu menu = Menu();
     await menu.buildFrom([
       MenuItemLabel(label: 'Show', onClicked: (menuItem) => _appWindow!.show()),
-      MenuItemLabel(
-        label: 'Quit',
-        onClicked: (menuItem) => _appWindow!.close(),
-      ),
+      MenuItemLabel(label: 'Quit', onClicked: (menuItem) => exit(0)),
     ]);
 
     await _systemTray!.setContextMenu(menu);
@@ -256,16 +281,11 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
                               status: "${device.os} : ${device.lastSeenIp}",
                               isAutoSync: device.autoSync,
                               onAutoSyncChanged: (val) async {
-                                await Engine().peerRegistry.toggleAutoSync(
-                                  device.id,
-                                );
+                                await ServiceClient().toggleAutoSync(device.id);
                                 _refresh();
                               },
                               onManualSync: () async {
-                                // Use forceSyncTo from Engine
-                                await Engine().clipboardManager.forceSyncTo(
-                                  device.id,
-                                );
+                                await ServiceClient().manualSync(device.id);
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -275,7 +295,7 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
                                 }
                               },
                               onUnpair: () async {
-                                await Engine().peerRegistry.unpair(device.id);
+                                await ServiceClient().unpair(device.id);
                                 _refresh();
                               },
                             );
@@ -350,6 +370,90 @@ class _UniclipDeskScreenState extends State<UniclipDeskScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPairingRequestDialog(String code) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.9),
+            border: Border.all(color: Colors.green.withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 10),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "INCOMING CONNECTION",
+                style: TextStyle(
+                  color: Colors.green,
+                  fontFamily: 'Courier',
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                "SECURITY VERIFICATION CODE",
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontFamily: 'Courier',
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                code,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Courier',
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      ServiceClient().confirmPairing(false);
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      "REJECT",
+                      style: TextStyle(
+                        color: Colors.red.withOpacity(0.8),
+                        fontFamily: 'Courier',
+                      ),
+                    ),
+                  ),
+                  SkeuoButton(
+                    width: 120,
+                    height: 40,
+                    color: Colors.green.shade900,
+                    onPressed: () {
+                      ServiceClient().confirmPairing(true);
+                      Navigator.pop(context);
+                    },
+                    child: const Text("ACCEPT", style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
