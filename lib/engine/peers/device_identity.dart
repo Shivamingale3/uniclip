@@ -23,9 +23,7 @@ class DeviceIdentity {
       await prefs.setString(_keyDeviceId, _deviceId!);
     }
 
-    if (_deviceName == null) {
-      _deviceName = Platform.localHostname;
-    }
+    _deviceName ??= Platform.localHostname;
   }
 
   Future<List<String>> getIpAddresses() async {

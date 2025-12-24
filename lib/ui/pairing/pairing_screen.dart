@@ -12,7 +12,7 @@ class PairingScreen extends StatefulWidget {
 }
 
 class _PairingScreenState extends State<PairingScreen> {
-  List<DiscoveryMessage> _peers = [];
+  final List<DiscoveryMessage> _peers = [];
 
   @override
   void initState() {

@@ -45,8 +45,6 @@ class UniclipApp extends StatelessWidget {
           primary: primaryColor,
           secondary: primaryColor,
           surface: surfaceColor,
-          background: backgroundColor,
-          onBackground: Colors.white,
           onSurface: Colors.white,
         ),
         useMaterial3: true,

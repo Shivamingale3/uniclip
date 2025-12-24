@@ -13,7 +13,7 @@ class ScannerScreen extends StatefulWidget {
 
 class _ScannerScreenState extends State<ScannerScreen>
     with TickerProviderStateMixin {
-  List<DiscoveryMessage> _peers = [];
+  final List<DiscoveryMessage> _peers = [];
   late AnimationController _radarController;
 
   @override
@@ -193,10 +193,12 @@ class _ScannerScreenState extends State<ScannerScreen>
     if (lower.contains('android')) return Icons.android;
     if (lower.contains('ios') ||
         lower.contains('iphone') ||
-        lower.contains('mac'))
+        lower.contains('mac')) {
       return Icons.apple;
-    if (lower.contains('windows') || lower.contains('linux'))
+    }
+    if (lower.contains('windows') || lower.contains('linux')) {
       return Icons.computer;
+    }
     return Icons.device_unknown;
   }
 
@@ -365,16 +367,15 @@ class _ScannerScreenState extends State<ScannerScreen>
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
-                                                if (peer.os != null)
-                                                  Text(
-                                                    "OS: ${peer.os}",
-                                                    style: TextStyle(
-                                                      color: Colors.green
-                                                          .withOpacity(0.7),
-                                                      fontFamily: 'Courier',
-                                                      fontSize: 10,
-                                                    ),
+                                                Text(
+                                                  "OS: ${peer.os}",
+                                                  style: TextStyle(
+                                                    color: Colors.green
+                                                        .withOpacity(0.7),
+                                                    fontFamily: 'Courier',
+                                                    fontSize: 10,
                                                   ),
+                                                ),
                                               ],
                                             ),
                                           ],

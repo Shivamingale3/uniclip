@@ -462,10 +462,12 @@ class SkeuoControlModule extends StatelessWidget {
     if (lower.contains('android')) return Icons.android;
     if (lower.contains('ios') ||
         lower.contains('iphone') ||
-        lower.contains('mac'))
+        lower.contains('mac')) {
       return Icons.apple;
-    if (lower.contains('windows') || lower.contains('linux'))
+    }
+    if (lower.contains('windows') || lower.contains('linux')) {
       return Icons.computer;
+    }
     return Icons.device_unknown;
   }
 

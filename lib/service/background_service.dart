@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:uniclip/engine/engine.dart';
-import 'package:uniclip/engine/peers/peer_registry.dart';
 
 class BackgroundService {
   static Future<void> initialize() async {
@@ -63,7 +61,7 @@ void onStart(ServiceInstance service) async {
     FlutterLocalNotificationsPlugin().show(
       888,
       'Uniclip Active',
-      'Copied: ${content.length > 20 ? content.substring(0, 20) + "..." : content}',
+      'Copied: ${content.length > 20 ? "${content.substring(0, 20)}..." : content}',
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'uniclip_service',

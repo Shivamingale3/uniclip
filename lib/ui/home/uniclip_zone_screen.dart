@@ -203,7 +203,7 @@ class _UniclipZoneScreenState extends State<UniclipZoneScreen>
                       await Engine().peerRegistry.toggleAutoSync(device.id);
                       _refresh();
                     },
-                    activeColor: Theme.of(context).primaryColor,
+                    activeThumbColor: Theme.of(context).primaryColor,
                   ),
                 ),
               ],
