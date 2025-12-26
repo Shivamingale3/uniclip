@@ -65,7 +65,7 @@ class PairingManager {
         tcpPort: localPort, // SENDING LOCAL PORT
       );
 
-      _sendJson(socket, hello.toJson());
+      await _sendJson(socket, hello.toJson());
     } catch (e) {
       print("Pairing connection failed: $e");
       _eventController.add(
@@ -75,7 +75,7 @@ class PairingManager {
     }
   }
 
-  void confirmPairing(bool accept) {
+  void confirmPairing(bool accept) async {
     if (_state != PairingState.confirming) return;
 
     // Include identity in confirmation so initiator knows who accepted
@@ -87,11 +87,11 @@ class PairingManager {
     );
 
     if (_currentSocket != null) {
-      _sendJson(_currentSocket!, msg.toJson());
+      await _sendJson(_currentSocket!, msg.toJson());
     }
 
     if (accept) {
-      _finalizePairing();
+      await _finalizePairing();
     } else {
       _reset();
     }
@@ -138,34 +138,50 @@ class PairingManager {
     }
   }
 
-  void _finalizePairing() async {
-    _state = PairingState.paired;
+  Future<void> _finalizePairing() async {
+    try {
+      _state = PairingState.paired;
 
-    if (_pendingPeerId != null && _pendingPeerName != null) {
-      await peerRegistry.addOrUpdate(
-        _pendingPeerId!,
-        _pendingPeerName!,
-        _pendingPeerOs ?? 'unknown',
-        _currentSocket?.remoteAddress.address ?? '127.0.0.1',
-        _pendingPeerPort,
+      if (_pendingPeerId != null && _pendingPeerName != null) {
+        await peerRegistry.addOrUpdate(
+          _pendingPeerId!,
+          _pendingPeerName!,
+          _pendingPeerOs ?? 'unknown',
+          _currentSocket?.remoteAddress.address ?? '127.0.0.1',
+          _pendingPeerPort,
+        );
+      }
+
+      _eventController.add(
+        PairingEvent(PairingEventType.success, "Paired successfully"),
       );
+    } catch (e) {
+      print("Error finalizing pairing: $e");
+      _eventController.add(
+        PairingEvent(PairingEventType.error, "Failed to save peer"),
+      );
+    } finally {
+      _reset();
     }
-
-    _eventController.add(
-      PairingEvent(PairingEventType.success, "Paired successfully"),
-    );
-    _reset();
   }
 
-  void _sendJson(Socket socket, Map<String, dynamic> data) {
-    final jsonString = jsonEncode(data);
-    socket.write(jsonString);
-    socket.flush();
+  Future<void> _sendJson(Socket socket, Map<String, dynamic> data) async {
+    try {
+      final jsonString = jsonEncode(data);
+      socket.write(jsonString);
+      await socket.flush();
+    } catch (e) {
+      print("Error sending data: $e");
+    }
   }
 
   void _reset() {
     _state = PairingState.idle;
-    _currentSocket?.close();
+    try {
+      _currentSocket?.close();
+    } catch (e) {
+      print("Error closing socket: $e");
+    }
     _currentSocket = null;
     _currentCode = null;
     // Don't clear pending immediately if needed for finalize, but handled above
